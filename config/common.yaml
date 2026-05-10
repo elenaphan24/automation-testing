@@ -1,0 +1,15 @@
+retry:
+  max_attempts: 3
+  backoff_ms: 500
+
+logging:
+  level: INFO
+  artifact_dir: reports/failure_artifacts
+
+allure:
+  results_dir: reports/allure-results
+
+timeouts:
+  page_load_ms: 10000
+  api_response_ms: 5000
+

@@ -1,0 +1,8 @@
+{
+  "name": "qa-automation-framework",
+  "private": true,
+  "devDependencies": {
+    "@playwright/mcp": "0.0.36",
+    "playwright": "1.44.0"
+  }
+}

@@ -1,0 +1,13 @@
+required:
+  - env
+  - urls.base_url
+  - urls.api_base_url
+  - auth.jwt_secret_var
+  - database.schema_prefix
+  - database.connection_var
+
+allowed_envs:
+  - sandbox
+  - staging
+  - production
+

@@ -1,0 +1,4 @@
+data/excel/** binary
+*.xlsx binary
+*.xls binary
+

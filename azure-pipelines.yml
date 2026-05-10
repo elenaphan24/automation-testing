@@ -1,0 +1,66 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  ENV: sandbox
+  CI_WORKER_COUNT: 4
+
+stages:
+  - stage: StaticChecks
+    jobs:
+      - job: RuntimeImportPolicy
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.11'
+          - script: pip install -r requirements.txt
+            displayName: Install dependencies
+          - script: python tools/lint_no_runtime_pandas.py
+            displayName: Enforce Excel adapter boundary
+
+  - stage: APITests
+    dependsOn: StaticChecks
+    jobs:
+      - job: FastTests
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.11'
+          - script: pip install -r requirements.txt
+            displayName: Install dependencies
+          - script: |
+              pytest tests/api/ tests/infra/ \
+                -n $(CI_WORKER_COUNT) \
+                --dist worksteal \
+                --alluredir=$(Build.ArtifactStagingDirectory)/allure-api
+            displayName: Run API and infra tests
+            env:
+              ENV: $(ENV)
+              CI_WORKER_COUNT: $(CI_WORKER_COUNT)
+          - publish: $(Build.ArtifactStagingDirectory)/allure-api
+            artifact: allure-api
+
+  - stage: E2ETests
+    dependsOn: APITests
+    jobs:
+      - job: E2EJourneys
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.11'
+          - script: pip install -r requirements.txt
+            displayName: Install dependencies
+          - script: |
+              pytest tests/e2e/ tests/ui/ \
+                --splits $(CI_WORKER_COUNT) \
+                --group 1 \
+                --alluredir=$(Build.ArtifactStagingDirectory)/allure-e2e
+            displayName: Run UI and E2E shard
+            env:
+              ENV: $(ENV)
+              CI_WORKER_COUNT: $(CI_WORKER_COUNT)
+          - publish: $(Build.ArtifactStagingDirectory)/allure-e2e
+            artifact: allure-e2e
+

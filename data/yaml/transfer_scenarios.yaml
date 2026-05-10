@@ -1,0 +1,5 @@
+- name: vip_laptop_purchase
+  starting_balance: 500
+  amount: 125
+  expected_balance: 375
+

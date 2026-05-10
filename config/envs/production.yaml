@@ -1,0 +1,18 @@
+env: production
+
+urls:
+  base_url: https://app.example.com
+  api_base_url: https://api.example.com
+
+auth:
+  jwt_secret_var: PRODUCTION_JWT_SECRET
+  token_expiry_seconds: 1800
+
+database:
+  schema_prefix: prod_readonly
+  connection_var: PRODUCTION_DB_URL
+
+feature_flags:
+  visual_regression: false
+  parallel_workers_default: 1
+

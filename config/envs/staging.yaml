@@ -1,0 +1,18 @@
+env: staging
+
+urls:
+  base_url: https://staging.app.example.com
+  api_base_url: https://staging-api.example.com
+
+auth:
+  jwt_secret_var: STAGING_JWT_SECRET
+  token_expiry_seconds: 3600
+
+database:
+  schema_prefix: test_staging
+  connection_var: STAGING_DB_URL
+
+feature_flags:
+  visual_regression: true
+  parallel_workers_default: 4
+
