@@ -13,7 +13,7 @@
 - New API service: create in `business/services/` and inherit from `BaseService`.
 - New test: create in `tests/e2e/`, `tests/api/`, `tests/ui/`, or `tests/smoke/`.
 - New Actor: inherit from `BaseActor`, implement `seed()`, `teardown()`, and `role`.
-- Add `@allure.step()` on every meaningful action.
+- Log meaningful actions through the `[UI]` / `[API]` / `[TAF]` logger; step-level tracking is logger-driven (no decorator-based step framework).
 - Logs must use `[UI]`, `[API]`, or `[TAF]` layer tags through `get_logger`.
 
 ## Locator Priority
@@ -42,5 +42,5 @@
 - Does it use resilient locators before CSS selectors?
 - Are log statements layer-tagged?
 - Is test data in YAML/JSON instead of hardcoded in tests?
-- Does each business action have an Allure step?
+- Does each business action emit a layer-tagged logger call?
 - Does the PR say `AI-generated - reviewed by <name>` when applicable?

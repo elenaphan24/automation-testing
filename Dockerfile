@@ -8,5 +8,5 @@ RUN playwright install --with-deps chromium firefox
 
 COPY . .
 
-CMD ["pytest", "--alluredir=reports/allure-results"]
+CMD ["pytest", "--html=reports/html_report.html", "--self-contained-html", "--junitxml=reports/junit.xml"]
 

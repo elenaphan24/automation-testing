@@ -32,22 +32,24 @@ stages:
           - script: pip install -r requirements.txt
             displayName: Install dependencies
           - script: |
+              mkdir -p $(Build.ArtifactStagingDirectory)/html-api
               pytest tests/api/ tests/infra/ \
                 -n $(CI_WORKER_COUNT) \
                 --dist worksteal \
-                --alluredir=$(Build.ArtifactStagingDirectory)/allure-api
+                --html=$(Build.ArtifactStagingDirectory)/html-api/report.html \
+                --self-contained-html \
+                --junitxml=$(Build.ArtifactStagingDirectory)/junit-api.xml
             displayName: Run API and infra tests
             env:
               ENV: $(ENV)
               CI_WORKER_COUNT: $(CI_WORKER_COUNT)
-          - script: |
-              npm install -g allure-commandline
-              allure generate $(Build.ArtifactStagingDirectory)/allure-api \
-                -o $(Build.ArtifactStagingDirectory)/allure-api-html --clean
-            displayName: Generate Allure HTML report
+          - task: PublishTestResults@2
             condition: always()
-          - publish: $(Build.ArtifactStagingDirectory)/allure-api-html
-            artifact: allure-api
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: $(Build.ArtifactStagingDirectory)/junit-api.xml
+          - publish: $(Build.ArtifactStagingDirectory)/html-api
+            artifact: html-api
 
   # SHARD_COUNT must equal the number of matrix entries below.
   # CI_WORKER_COUNT controls xdist workers per stage (API/infra),
@@ -73,21 +75,22 @@ stages:
           - script: pip install -r requirements.txt
             displayName: Install dependencies
           - script: |
+              mkdir -p $(Build.ArtifactStagingDirectory)/html-e2e-$(SHARD_GROUP)
               pytest tests/e2e/ tests/ui/ \
                 --splits $(SHARD_COUNT) \
                 --group $(SHARD_GROUP) \
-                --alluredir=$(Build.ArtifactStagingDirectory)/allure-e2e-$(SHARD_GROUP)
+                --html=$(Build.ArtifactStagingDirectory)/html-e2e-$(SHARD_GROUP)/report.html \
+                --self-contained-html \
+                --junitxml=$(Build.ArtifactStagingDirectory)/junit-e2e-$(SHARD_GROUP).xml
             displayName: Run UI and E2E shard
             env:
               ENV: $(ENV)
               CI_WORKER_COUNT: $(CI_WORKER_COUNT)
               SHARD_COUNT: $(SHARD_COUNT)
-          - script: |
-              npm install -g allure-commandline
-              allure generate $(Build.ArtifactStagingDirectory)/allure-e2e-$(SHARD_GROUP) \
-                -o $(Build.ArtifactStagingDirectory)/allure-e2e-html-$(SHARD_GROUP) --clean
-            displayName: Generate Allure HTML report
+          - task: PublishTestResults@2
             condition: always()
-          - publish: $(Build.ArtifactStagingDirectory)/allure-e2e-html-$(SHARD_GROUP)
-            artifact: allure-e2e-$(SHARD_GROUP)
-
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: $(Build.ArtifactStagingDirectory)/junit-e2e-$(SHARD_GROUP).xml
+          - publish: $(Build.ArtifactStagingDirectory)/html-e2e-$(SHARD_GROUP)
+            artifact: html-e2e-$(SHARD_GROUP)

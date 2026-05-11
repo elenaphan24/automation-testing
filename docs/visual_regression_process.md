@@ -14,5 +14,5 @@ Visual baselines must be generated inside the Docker image, never from a develop
 
 - Sandbox and staging may run visual checks.
 - Production runs smoke tests only and does not update baselines.
-- Failed baselines produce Allure attachments and Playwright traces.
+- Failed baselines embed inline in the pytest-html report and produce Playwright traces.
 

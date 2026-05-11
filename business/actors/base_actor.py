@@ -22,5 +22,5 @@ class BaseActor(ABC):
     @property
     @abstractmethod
     def role(self) -> str:
-        """Human-readable role name used in log attribution and Allure steps."""
+        """Human-readable role name used in log attribution and test reports."""
 

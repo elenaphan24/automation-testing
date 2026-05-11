@@ -8,12 +8,6 @@ $env:ENV = "sandbox"
 pytest tests/
 ```
 
-Install the Allure CLI if you want to view HTML reports locally:
-
-```powershell
-npm install -g allure-commandline
-```
-
 ## Fixture Dependency Flow
 
 ```text
@@ -44,19 +38,12 @@ def test_create_basic_user(user_service):
 
 ## Run Reports
 
-Allure result files are written to `reports/allure-results`. Generate the HTML report with your local Allure CLI:
-
-```powershell
-allure serve reports/allure-results
-```
+pytest writes `reports/html_report.html` (single self-contained file) and `reports/junit.xml`. Open the HTML file in any browser.
 
 ## Troubleshooting
 
 `ENV` not set:
 The framework defaults to `sandbox`, so local runs do not require an `ENV` variable. Set `$env:ENV = "staging"` or `$env:ENV = "production"` only when intentionally switching environments.
-
-Missing Allure CLI:
-If `allure serve reports/allure-results` is not recognized, install it with `npm install -g allure-commandline`. Pytest still writes raw Allure result files even when the CLI is missing.
 
 `worker_id` fixture error:
 The framework provides a `worker_id` fallback for non-xdist runs. If you see a fixture error, confirm `conftest.py` is being discovered from the repository root and run `pytest tests/` from the project directory.

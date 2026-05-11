@@ -8,7 +8,7 @@ The framework maps to the ISTQB generic Test Automation Architecture:
 | --- | --- |
 | Test Generation | `@playwright/mcp` and AI agent governance in Phase 4 |
 | Test Definition | pytest tests, Journey runner, BDD-style scenario data |
-| Test Execution | pytest, Playwright, Allure, Azure Pipelines |
+| Test Execution | pytest, Playwright, pytest-html, Azure Pipelines |
 | Test Adaptation | `BasePage`, `BaseService`, wait utilities, logging |
 
 ## Three-Layer Code Model

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from core.allure_compat import allure
 from core.base_page import BasePage
 
 
 class CheckoutPage(BasePage):
     path = "/checkout"
 
-    @allure.step("Buy laptop through UI")
     def buy_laptop(self, amount: int) -> dict[str, int | str]:
         self.goto(self.path)
         # Real Playwright: self.page.get_by_label("Amount").fill(str(amount))

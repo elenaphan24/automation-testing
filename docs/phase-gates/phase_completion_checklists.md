@@ -16,7 +16,7 @@ Every phase closes only after review, tests, and documentation updates are compl
 
 - Three-layer folder structure is present.
 - BasePage, BaseService, and structured logger are implemented.
-- Allure output directory is configured from day one.
+- pytest-html report and JUnit XML output are configured from day one.
 - JWT spike outcome is documented in ADR-001.
 - Three PoC tests are present for API, UI, and E2E.
 - Worker count is controlled through environment variables or pytest hook.
@@ -35,7 +35,7 @@ Every phase closes only after review, tests, and documentation updates are compl
 - Parallel execution strategy is documented.
 - Worker schema isolation is verified.
 - Dockerfile builds a Playwright-capable test image.
-- Azure Pipeline runs API before E2E and publishes Allure artifacts.
+- Azure Pipeline runs API before E2E and publishes pytest-html artifacts plus JUnit test results.
 - Visual regression baseline process is documented.
 
 ## Phase 4

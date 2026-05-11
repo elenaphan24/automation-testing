@@ -7,7 +7,7 @@ Azure Pipelines runs:
 1. Static import-policy checks.
 2. API and infra tests with `pytest-xdist --dist worksteal`.
 3. UI and E2E tests with `pytest-split`.
-4. Allure artifact publishing.
+4. pytest-html artifact publishing.
 
 ## Visual Baselines
 
@@ -26,6 +26,6 @@ If a visual baseline passes locally but fails in CI, the usual cause is operatin
 
 ## Failure Screenshots
 
-With the fake page object, screenshots taken through `BasePage.screenshot()` are stored on the pytest node and attached to Allure when the test fails. When real Playwright is wired, add an autouse fixture that calls `page.screenshot()` on failure so the same Allure failure hook can attach the captured image.
+With the fake page object, screenshots taken through `BasePage.screenshot()` are stored on the pytest node and embedded in the pytest-html report when the test fails. When real Playwright is wired, add an autouse fixture that calls `page.screenshot()` on failure so the same failure hook can embed the captured image.
 
 

@@ -7,7 +7,7 @@ A QA team member who did not build the framework must add one new E2E journey us
 1. Add YAML scenario data.
 2. Use or create an Actor.
 3. Add a Journey test.
-4. Run locally with Allure output.
+4. Run locally and open the pytest-html report.
 5. Confirm the same test runs in Azure Pipelines.
 
 Pass condition: the tester completes the flow without verbal assistance from the framework authors.

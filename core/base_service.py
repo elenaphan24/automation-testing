@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-from core.allure_compat import allure
 from core.config import get
 from core.logging_util import get_logger
 
@@ -39,7 +38,6 @@ class BaseService:
             headers["Authorization"] = f"Bearer {self.auth_token}"
         return headers
 
-    @allure.step("API request: {method} {path}")
     def request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
         self.logger.info("%s %s", method.upper(), path)
         response = self.transport.request(
@@ -53,8 +51,6 @@ class BaseService:
             raise AssertionError(f"{method.upper()} {path} failed: {response.status_code} {data}")
         return data
 
-    @allure.step("Assert API response field {field}")
     def assert_field(self, actual: dict[str, Any], field: str, expected: Any) -> None:
         self.logger.info("assert %s == %r", field, expected)
         assert actual.get(field) == expected
-

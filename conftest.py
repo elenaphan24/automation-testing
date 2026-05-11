@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import base64
 import os
 import uuid
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -52,6 +52,18 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[Any]):
     outcome = yield
     report = outcome.get_result()
     setattr(item, f"rep_{report.when}", report)
+    if report.when == "call" and report.failed:
+        screenshot = getattr(item, "_screenshot", None)
+        if screenshot:
+            try:
+                from pytest_html import extras
+
+                encoded = base64.b64encode(screenshot).decode("ascii")
+                extra = getattr(report, "extras", [])
+                extra.append(extras.png(encoded, name="failure-screenshot"))
+                report.extras = extra
+            except ImportError:
+                logger.warning("pytest-html not installed; screenshot not embedded")
 
 
 @pytest.fixture(autouse=True)
@@ -61,18 +73,6 @@ def capture_artifacts_on_failure(request: pytest.FixtureRequest):
     if report and report.failed:
         artifact_dir = export_failure_artifact(request.node)
         logger.info("exported failure artifacts to %s", artifact_dir)
-        try:
-            from core.allure_compat import allure
-
-            screenshot = getattr(request.node, "_screenshot", None)
-            if screenshot:
-                allure.attach(
-                    screenshot,
-                    name="failure-screenshot",
-                    attachment_type=allure.attachment_type.PNG,
-                )
-        except Exception:
-            pass
 
 
 @pytest.fixture(scope="session")

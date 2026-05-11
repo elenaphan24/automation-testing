@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from core.allure_compat import step_context
 from core.logging_util import get_logger
 
 
@@ -22,30 +21,26 @@ class Journey:
     logger: Any = field(default_factory=lambda: get_logger("Journey", "TAF"))
 
     def given(self, actor: Any) -> "Journey":
-        with step_context(f"GIVEN {actor.role} is seeded"):
-            try:
-                self.logger.info("GIVEN %s", actor.role)
-                self.context["actor"] = actor
-                self.context["credentials"] = actor.seed()
-            except Exception as exc:
-                raise JourneyFailure("GIVEN", "API", exc) from exc
+        try:
+            self.logger.info("GIVEN %s", actor.role)
+            self.context["actor"] = actor
+            self.context["credentials"] = actor.seed()
+        except Exception as exc:
+            raise JourneyFailure("GIVEN", "API", exc) from exc
         return self
 
     def when(self, action: Callable[..., Any], *args: Any, layer: str = "UI", **kwargs: Any) -> "Journey":
-        with step_context(f"WHEN {action.__name__}"):
-            try:
-                self.logger.info("WHEN %s", action.__name__)
-                self.context["last_action"] = action(*args, **kwargs)
-            except Exception as exc:
-                raise JourneyFailure("WHEN", layer, exc) from exc
+        try:
+            self.logger.info("WHEN %s", action.__name__)
+            self.context["last_action"] = action(*args, **kwargs)
+        except Exception as exc:
+            raise JourneyFailure("WHEN", layer, exc) from exc
         return self
 
     def then(self, assertion: Callable[..., Any], *args: Any, **kwargs: Any) -> "Journey":
-        with step_context(f"THEN {assertion.__name__}"):
-            try:
-                self.logger.info("THEN %s", assertion.__name__)
-                assertion(*args, **kwargs)
-            except Exception as exc:
-                raise JourneyFailure("THEN", "API", exc) from exc
+        try:
+            self.logger.info("THEN %s", assertion.__name__)
+            assertion(*args, **kwargs)
+        except Exception as exc:
+            raise JourneyFailure("THEN", "API", exc) from exc
         return self
-
