@@ -34,3 +34,7 @@ Expected files:
 - Confidence must be between 0 and 1.
 - The TAE owns the final diagnosis and fix decision.
 
+## Placeholder Handling
+
+Zero-byte `ui_screenshot.png` or `playwright_trace.zip` files indicate the artifact was not produced, for example scaffold runs with the fake SUT or non-UI tests. Do not cite them as evidence. Hypotheses must rely on `api_log.json` and `stack_trace.txt` until real Playwright is wired and these artifacts contain non-zero data.
+

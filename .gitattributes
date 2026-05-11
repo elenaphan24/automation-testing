@@ -2,5 +2,4 @@ data/excel/** binary
 *.xlsx binary
 *.xls binary
 tests/visual/baselines/** filter=lfs diff=lfs merge=lfs -text
-*.png filter=lfs diff=lfs merge=lfs -text
 

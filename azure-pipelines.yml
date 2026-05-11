@@ -6,6 +6,7 @@ trigger:
 variables:
   ENV: sandbox
   CI_WORKER_COUNT: 4
+  SHARD_COUNT: 4
 
 stages:
   - stage: StaticChecks
@@ -48,6 +49,9 @@ stages:
           - publish: $(Build.ArtifactStagingDirectory)/allure-api-html
             artifact: allure-api
 
+  # SHARD_COUNT must equal the number of matrix entries below.
+  # CI_WORKER_COUNT controls xdist workers per stage (API/infra),
+  # not E2E shards. Keep these two values independent.
   - stage: E2ETests
     dependsOn: APITests
     jobs:
@@ -70,13 +74,14 @@ stages:
             displayName: Install dependencies
           - script: |
               pytest tests/e2e/ tests/ui/ \
-                --splits $(CI_WORKER_COUNT) \
+                --splits $(SHARD_COUNT) \
                 --group $(SHARD_GROUP) \
                 --alluredir=$(Build.ArtifactStagingDirectory)/allure-e2e-$(SHARD_GROUP)
             displayName: Run UI and E2E shard
             env:
               ENV: $(ENV)
               CI_WORKER_COUNT: $(CI_WORKER_COUNT)
+              SHARD_COUNT: $(SHARD_COUNT)
           - script: |
               npm install -g allure-commandline
               allure generate $(Build.ArtifactStagingDirectory)/allure-e2e-$(SHARD_GROUP) \
