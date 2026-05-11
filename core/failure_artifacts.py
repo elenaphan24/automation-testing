@@ -30,6 +30,10 @@ def export_failure_artifact(node: Any) -> Path:
     }
     (artifact_dir / "api_log.json").write_text(json.dumps(api_log, indent=2), encoding="utf-8")
 
+    # Replace with real page.screenshot() and context.tracing.stop() when Playwright is wired.
+    (artifact_dir / "ui_screenshot.png").write_bytes(b"")
+    (artifact_dir / "playwright_trace.zip").write_bytes(b"")
+
     (artifact_dir / "README.txt").write_text(
         "Failure artifacts are intentionally file-based. AI analysis reads these files only.\n",
         encoding="utf-8",
