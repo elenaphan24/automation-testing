@@ -39,13 +39,29 @@ stages:
             env:
               ENV: $(ENV)
               CI_WORKER_COUNT: $(CI_WORKER_COUNT)
-          - publish: $(Build.ArtifactStagingDirectory)/allure-api
+          - script: |
+              npm install -g allure-commandline
+              allure generate $(Build.ArtifactStagingDirectory)/allure-api \
+                -o $(Build.ArtifactStagingDirectory)/allure-api-html --clean
+            displayName: Generate Allure HTML report
+            condition: always()
+          - publish: $(Build.ArtifactStagingDirectory)/allure-api-html
             artifact: allure-api
 
   - stage: E2ETests
     dependsOn: APITests
     jobs:
       - job: E2EJourneys
+        strategy:
+          matrix:
+            shard_1:
+              SHARD_GROUP: 1
+            shard_2:
+              SHARD_GROUP: 2
+            shard_3:
+              SHARD_GROUP: 3
+            shard_4:
+              SHARD_GROUP: 4
         steps:
           - task: UsePythonVersion@0
             inputs:
@@ -55,12 +71,18 @@ stages:
           - script: |
               pytest tests/e2e/ tests/ui/ \
                 --splits $(CI_WORKER_COUNT) \
-                --group 1 \
-                --alluredir=$(Build.ArtifactStagingDirectory)/allure-e2e
+                --group $(SHARD_GROUP) \
+                --alluredir=$(Build.ArtifactStagingDirectory)/allure-e2e-$(SHARD_GROUP)
             displayName: Run UI and E2E shard
             env:
               ENV: $(ENV)
               CI_WORKER_COUNT: $(CI_WORKER_COUNT)
-          - publish: $(Build.ArtifactStagingDirectory)/allure-e2e
-            artifact: allure-e2e
+          - script: |
+              npm install -g allure-commandline
+              allure generate $(Build.ArtifactStagingDirectory)/allure-e2e-$(SHARD_GROUP) \
+                -o $(Build.ArtifactStagingDirectory)/allure-e2e-html-$(SHARD_GROUP) --clean
+            displayName: Generate Allure HTML report
+            condition: always()
+          - publish: $(Build.ArtifactStagingDirectory)/allure-e2e-html-$(SHARD_GROUP)
+            artifact: allure-e2e-$(SHARD_GROUP)
 
