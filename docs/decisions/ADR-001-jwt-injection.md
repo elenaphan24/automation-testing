@@ -1,6 +1,6 @@
 # ADR-001: JWT Injection Spike
 
-Status: Proposed fallback documented
+Status: Accepted (fallback only); full spike deferred until live sandbox SUT is available
 
 ## Context
 

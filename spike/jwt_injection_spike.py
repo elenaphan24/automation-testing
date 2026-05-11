@@ -1,24 +1,27 @@
-"""JWT injection spike checklist.
+"""Pytest scaffold for the live JWT injection spike.
 
-Run against the real sandbox SUT before any production E2E flow depends on token
-injection. This file intentionally documents the experiment boundary; it avoids
-pretending the greenfield fake SUT can answer security questions about the app.
+The fake SUT cannot answer browser storage, CSRF, token TTL, or session binding
+questions. These tests are intentionally skipped until a live sandbox SUT and
+real Playwright fixtures are wired.
 """
 
-
-QUESTIONS = [
-    "Can a Playwright BrowserContext accept a JWT from the API response?",
-    "Does the app enforce CSRF validation on injected sessions?",
-    "What is the token TTL, and can it expire mid-suite?",
-    "Does session binding prevent cross-environment injection?",
-]
+import pytest
 
 
-def main() -> None:
-    for index, question in enumerate(QUESTIONS, start=1):
-        print(f"{index}. {question}")
+pytest.skip("Requires live sandbox SUT", allow_module_level=True)
 
 
-if __name__ == "__main__":
-    main()
+def test_browser_context_accepts_injected_jwt():
+    """Can a Playwright BrowserContext accept a JWT from the API response?"""
 
+
+def test_app_enforces_csrf_on_injected_session():
+    """Does the app enforce CSRF validation on injected sessions?"""
+
+
+def test_token_ttl_does_not_expire_mid_suite():
+    """What is the token TTL, and can it expire mid-run on long suites?"""
+
+
+def test_session_binding_blocks_cross_env_injection():
+    """Does session binding prevent cross-environment injection?"""
