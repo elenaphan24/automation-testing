@@ -29,8 +29,7 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 def pytest_xdist_auto_num_workers(config: pytest.Config) -> int:
-    env = os.getenv("ENV", "sandbox").lower()
-    if env == "ci":
+    if os.getenv("CI") or os.getenv("TF_BUILD"):
         return int(os.getenv("CI_WORKER_COUNT", "4"))
     return int(os.getenv("LOCAL_WORKER_COUNT", "2"))
 
@@ -62,11 +61,28 @@ def capture_artifacts_on_failure(request: pytest.FixtureRequest):
     if report and report.failed:
         artifact_dir = export_failure_artifact(request.node)
         logger.info("exported failure artifacts to %s", artifact_dir)
+        try:
+            from core.allure_compat import allure
+
+            screenshot = getattr(request.node, "_screenshot", None)
+            if screenshot:
+                allure.attach(
+                    screenshot,
+                    name="failure-screenshot",
+                    attachment_type=allure.attachment_type.PNG,
+                )
+        except Exception:
+            pass
 
 
 @pytest.fixture(scope="session")
 def fake_db() -> FakeDatabase:
     return FakeDatabase()
+
+
+@pytest.fixture(scope="session")
+def worker_id(request: pytest.FixtureRequest) -> str:
+    return getattr(request.config, "workerinput", {}).get("workerid", "master")
 
 
 @pytest.fixture(scope="session")
@@ -89,8 +105,10 @@ def user_service(api_transport: FakeApiTransport) -> UserService:
 
 
 @pytest.fixture
-def browser_page() -> FakeBrowserPage:
-    return FakeBrowserPage()
+def browser_page(request: pytest.FixtureRequest) -> FakeBrowserPage:
+    page = FakeBrowserPage()
+    page._pytest_node = request.node
+    return page
 
 
 @pytest.fixture

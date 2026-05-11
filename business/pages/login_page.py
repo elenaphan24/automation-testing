@@ -13,9 +13,12 @@ class LoginPage(BasePage):
 
     @allure.step("Login through UI")
     def login(self, email: str, password: str) -> None:
-        self.fill("[data-testid=email]", email)
-        self.fill("[data-testid=password]", password)
-        self.click("[data-testid=login-submit]")
+        # Real Playwright: self.page.get_by_label("Email").fill(email)
+        self.fill("[data-testid=email]", email)  # FakeSUT fallback
+        # Real Playwright: self.page.get_by_label("Password").fill(password)
+        self.fill("[data-testid=password]", password)  # FakeSUT fallback
+        # Real Playwright: self.page.get_by_role("button", name="Log in").click()
+        self.click("[data-testid=login-submit]")  # FakeSUT fallback
 
     @allure.step("Verify login page title")
     def assert_title_contains(self, expected: str) -> None:

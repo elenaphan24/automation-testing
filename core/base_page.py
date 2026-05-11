@@ -8,6 +8,13 @@ from core.logging_util import get_logger
 
 
 class BasePage:
+    """Shared page wrapper.
+
+    Real Playwright projects should capture `page.screenshot()` in an autouse
+    fixture on failure. The fake page fixture stores screenshots on the pytest
+    node so the framework-level Allure failure hook can attach them.
+    """
+
     path = "/"
 
     def __init__(self, page: Any) -> None:
@@ -35,6 +42,9 @@ class BasePage:
     @allure.step("Take screenshot")
     def screenshot(self, name: str = "screenshot") -> bytes:
         image = self.page.screenshot()
+        node = getattr(self.page, "_pytest_node", None)
+        if node is not None:
+            setattr(node, "_screenshot", image)
         allure.attach(image, name=name, attachment_type=getattr(allure.attachment_type, "PNG", None))
         return image
 
