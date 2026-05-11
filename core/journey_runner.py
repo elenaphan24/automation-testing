@@ -31,13 +31,13 @@ class Journey:
                 raise JourneyFailure("GIVEN", "API", exc) from exc
         return self
 
-    def when(self, action: Callable[..., Any], *args: Any, **kwargs: Any) -> "Journey":
+    def when(self, action: Callable[..., Any], *args: Any, layer: str = "UI", **kwargs: Any) -> "Journey":
         with step_context(f"WHEN {action.__name__}"):
             try:
                 self.logger.info("WHEN %s", action.__name__)
                 self.context["last_action"] = action(*args, **kwargs)
             except Exception as exc:
-                raise JourneyFailure("WHEN", "UI", exc) from exc
+                raise JourneyFailure("WHEN", layer, exc) from exc
         return self
 
     def then(self, assertion: Callable[..., Any], *args: Any, **kwargs: Any) -> "Journey":

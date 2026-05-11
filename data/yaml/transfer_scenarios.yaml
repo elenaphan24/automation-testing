@@ -2,4 +2,8 @@
   starting_balance: 500
   amount: 125
   expected_balance: 375
+- name: insufficient_balance
+  starting_balance: 100
+  amount: 200
+  expected_balance: -100
 
