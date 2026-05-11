@@ -1,0 +1,2 @@
+# pytest writes html_report.html and junit.xml into this directory at runtime.
+# Both are gitignored. This .gitkeep keeps the folder structure in the repo.
