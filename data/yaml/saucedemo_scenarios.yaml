@@ -1,0 +1,8 @@
+- name: standard_user_backpack_checkout
+  username: standard_user
+  password: secret_sauce
+  item_name: Sauce Labs Backpack
+  checkout:
+    first_name: Standard
+    last_name: User
+    postal_code: "10001"

@@ -1,0 +1,54 @@
+# Restful Booker uses fixed admin creds; scenarios vary the booking payloads.
+- name: jim_brown_breakfast
+  username: admin
+  password: password123
+  invalid_username: wrong-admin
+  invalid_password: wrong-password
+  booking:
+    firstname: Jim
+    lastname: Brown
+    totalprice: 111
+    depositpaid: true
+    bookingdates:
+      checkin: "2026-06-01"
+      checkout: "2026-06-05"
+    additionalneeds: Breakfast
+  updated_booking:
+    firstname: James
+    lastname: Brown
+    totalprice: 222
+    depositpaid: false
+    bookingdates:
+      checkin: "2026-07-01"
+      checkout: "2026-07-03"
+    additionalneeds: Dinner
+  partial_update:
+    firstname: Jamie
+    additionalneeds: Late checkout
+
+- name: mary_smith_no_deposit
+  username: admin
+  password: password123
+  invalid_username: not-a-user
+  invalid_password: "12345"
+  booking:
+    firstname: Mary
+    lastname: Smith
+    totalprice: 480
+    depositpaid: false
+    bookingdates:
+      checkin: "2026-08-10"
+      checkout: "2026-08-14"
+    additionalneeds: Late check-in
+  updated_booking:
+    firstname: Mary
+    lastname: Smith-Jones
+    totalprice: 510
+    depositpaid: true
+    bookingdates:
+      checkin: "2026-08-11"
+      checkout: "2026-08-15"
+    additionalneeds: Airport transfer
+  partial_update:
+    totalprice: 520
+    additionalneeds: Spa package
