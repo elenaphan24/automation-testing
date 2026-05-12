@@ -49,13 +49,6 @@ class RestfulBookerService(BaseService):
     def safe_delete_booking(self, booking_id: int, username: str, password: str) -> None:
         try:
             self.create_token(username, password)
-            self.delete_booking(booking_id)
-        except Exception as exc:
-            self.logger.warning("teardown delete of booking %s failed: %s", booking_id, exc)
-
-    def safe_delete_booking(self, booking_id: int, username: str, password: str) -> None:
-        try:
-            self.create_token(username, password)
         except Exception as exc:
             self.logger.warning("teardown token refresh failed: %s", exc)
             return
