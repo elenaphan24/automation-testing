@@ -1,10 +1,12 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
 .venv/
 venv/
 reports/*.html
 reports/*.xml
+reports/coverage/
 reports/failure_artifacts/
 test-results/
 playwright-report/
