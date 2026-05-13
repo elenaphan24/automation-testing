@@ -25,10 +25,10 @@ Every phase closes only after review, tests, and documentation updates are compl
 
 - YAML/JSON data loader supports pytest parametrization.
 - Excel adapter converts spreadsheets to YAML outside runtime tests.
-- BaseActor contract enforces seed, teardown, and role.
-- NewUser, VipUser, and Admin actors seed through API service objects.
+- BaseActor contract enforces seed, teardown, and role. [DEFERRED - see deferred_backlog.md]
+- NewUser, VipUser, and Admin actors seed through API service objects. [DEFERRED - see deferred_backlog.md]
 - Journey runner attributes GIVEN, WHEN, THEN failures to layers.
-- A complete Journey test runs from data to actor to assertion.
+- A complete Journey test runs from data to actor to assertion. [DEFERRED - see deferred_backlog.md]
 
 ## Phase 3
 

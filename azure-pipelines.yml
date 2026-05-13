@@ -36,6 +36,10 @@ stages:
               pytest tests/api/ tests/infra/ \
                 -n $(CI_WORKER_COUNT) \
                 --dist worksteal \
+                --cov=core \
+                --cov=business \
+                --cov-fail-under=55 \
+                --cov-report=xml:$(Build.ArtifactStagingDirectory)/coverage.xml \
                 --html=$(Build.ArtifactStagingDirectory)/html-api/report.html \
                 --self-contained-html \
                 --junitxml=$(Build.ArtifactStagingDirectory)/junit-api.xml
@@ -48,6 +52,26 @@ stages:
             inputs:
               testResultsFormat: JUnit
               testResultsFiles: $(Build.ArtifactStagingDirectory)/junit-api.xml
+          - task: PublishCodeCoverageResults@2
+            condition: always()
+            inputs:
+              summaryFileLocation: $(Build.ArtifactStagingDirectory)/coverage.xml
+          - bash: |
+              python - <<'PY'
+              import sys
+              import xml.etree.ElementTree as ET
+
+              tree = ET.parse('$(Build.ArtifactStagingDirectory)/junit-api.xml')
+              root = tree.getroot()
+              tests = int(root.get('tests', 0))
+              failures = int(root.get('failures', 0)) + int(root.get('errors', 0))
+              rate = (tests - failures) / tests if tests else 1
+              if rate < 0.9:
+                  print(f"QUALITY GATE FAILED: pass rate {rate:.1%} < 90%")
+                  sys.exit(1)
+              print(f"QUALITY GATE PASSED: pass rate {rate:.1%} >= 90%")
+              PY
+            displayName: Enforce API pass-rate quality gate
           - publish: $(Build.ArtifactStagingDirectory)/html-api
             artifact: html-api
 

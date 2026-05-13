@@ -35,6 +35,22 @@ class BasePage:
         self.logger.info("fill %s", selector)
         self.page.fill(selector, value)
 
+    def get_by_role(self, role: str, **kwargs) -> Any:
+        self.logger.info("locate by role %s %s", role, kwargs)
+        return self.page.get_by_role(role, **kwargs)
+
+    def get_by_label(self, text: str, **kwargs) -> Any:
+        self.logger.info("locate by label %s", text)
+        return self.page.get_by_label(text, **kwargs)
+
+    def get_by_placeholder(self, text: str, **kwargs) -> Any:
+        self.logger.info("locate by placeholder %s", text)
+        return self.page.get_by_placeholder(text, **kwargs)
+
+    def get_by_test_id(self, test_id: str) -> Any:
+        self.logger.info("locate by test-id %s", test_id)
+        return self.page.get_by_test_id(test_id)
+
     def screenshot(self, name: str = "screenshot") -> bytes:
         image = self.page.screenshot()
         node = getattr(self.page, "_pytest_node", None)

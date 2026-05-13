@@ -19,13 +19,16 @@ class SauceDemoInventoryPage(BasePage):
 
     def assert_item_visible(self, item_name: str) -> None:
         self.logger.info("assert inventory item visible %s", item_name)
+        # CSS - no semantic locator available on SauceDemo.
         self.page.locator(".inventory_item").filter(has_text=item_name).wait_for()
 
     def add_item_to_cart(self, item_name: str) -> None:
         self.logger.info("add inventory item to cart %s", item_name)
+        # CSS - no semantic locator available on SauceDemo.
         item = self.page.locator(".inventory_item").filter(has_text=item_name)
         item.get_by_role("button", name="Add to cart").click()
 
     def open_cart(self) -> None:
         self.logger.info("open cart")
+        # CSS - no semantic locator available on SauceDemo.
         self.page.locator(".shopping_cart_link").click()

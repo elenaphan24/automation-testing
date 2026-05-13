@@ -12,7 +12,7 @@
 - New page object: create in `business/pages/` and inherit from `BasePage`.
 - New API service: create in `business/services/` and inherit from `BaseService`.
 - New test: create in `tests/e2e/`, `tests/api/`, `tests/ui/`, or `tests/smoke/`.
-- New Actor: inherit from `BaseActor`, implement `seed()`, `teardown()`, and `role`.
+- Actor and precondition seeding is handled directly in test fixtures via `conftest.py`.
 - Log meaningful actions through the `[UI]` / `[API]` / `[TAF]` logger; step-level tracking is logger-driven (no decorator-based step framework).
 - Logs must use `[UI]`, `[API]`, or `[TAF]` layer tags through `get_logger`.
 
