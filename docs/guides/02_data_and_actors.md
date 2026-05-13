@@ -14,7 +14,7 @@ Expose data to tests through `business.data.scenarios()` so test scripts do not 
 
 ## Worked Example: Adding a PremiumUser Actor
 
-Walk through every layer for a new Actor that gets a higher starting balance and an extra perk credit.
+Walk through every layer for a new Actor that gets a higher starting balance and an extra perk credit. This is a reference pattern for teams wiring a real user-management service behind `BaseActor`.
 
 1. Add YAML scenario data at `data/yaml/premium_scenarios.yaml`:
 
@@ -60,8 +60,8 @@ class PremiumUser(BaseActor):
 
 ```python
 @pytest.fixture
-def premium_actor(user_service, worker_schema):
-    actor = PremiumUser(user_service, worker_schema)
+def premium_actor(api_service, worker_schema):
+    actor = PremiumUser(api_service, worker_schema)
     yield actor
     actor.teardown()
 ```
@@ -73,17 +73,12 @@ def premium_actor(user_service, worker_schema):
     "scenario",
     scenarios("data/yaml/premium_scenarios.yaml"),
 )
-def test_premium_perk_purchase(scenario, premium_actor, user_service, browser_page):
-    checkout_page = CheckoutPage(browser_page)
+def test_premium_perk_purchase(scenario, premium_actor, checkout_flow, api_service):
     premium_actor.starting_balance = scenario["starting_balance"]
     premium_actor.perk_credit = scenario["perk_credit"]
     journey = Journey().given(premium_actor)
-    browser_page.purchase_handler = lambda amount: user_service.record_purchase(
-        premium_actor.user["id"],
-        amount,
-    )
-    journey.when(checkout_page.buy_laptop, amount=scenario["amount"]).then(
-        user_service.assert_balance,
+    journey.when(checkout_flow.buy_laptop, amount=scenario["amount"]).then(
+        api_service.assert_balance,
         premium_actor.user["id"],
         scenario["expected_balance"],
     )
@@ -95,7 +90,7 @@ def test_premium_perk_purchase(scenario, premium_actor, user_service, browser_pa
 pytest tests/e2e/test_premium_journey.py -q
 ```
 
-The same five-step pattern applies to any new Actor: data, actor class, fixture, test, run.
+`checkout_flow` is the team's real business-layer checkout facade. The same five-step pattern applies to any new Actor: data, actor class, fixture, test, run.
 
 ## Excel Adapter
 

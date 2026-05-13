@@ -15,10 +15,10 @@ The default CI distribution mode for xdist is `--dist worksteal` because this fr
 
 | Fixture | Scope | Reason |
 | --- | --- | --- |
-| `browser_page` | function | Fresh browser state per test |
+| `live_browser_page` | function | Fresh browser state per test |
 | `worker_schema` | session | Isolated schema per worker |
-| `user_service` | function | Fresh auth/service context per test |
-| `fake_db` | session | Shared fake adapter behind isolated schemas |
+| `restful_booker_service` | function | Fresh auth/service context per test |
+| `schema_registry` | session | Tracks isolated schema names for scaffold infra checks |
 
 ## Conflict Detection
 

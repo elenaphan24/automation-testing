@@ -7,20 +7,34 @@ from typing import Any
 
 import pytest
 
-from business.pages.login_page import LoginPage
 from business.pages.saucedemo_cart_page import SauceDemoCartPage
 from business.pages.saucedemo_checkout_page import SauceDemoCheckoutPage
 from business.pages.saucedemo_inventory_page import SauceDemoInventoryPage
 from business.pages.saucedemo_login_page import SauceDemoLoginPage
 from business.services.restful_booker_service import RestfulBookerService
-from business.services.user_service import UserService
 from core.config import get as config_get, load_config, validate_required_keys
 from core.failure_artifacts import export_failure_artifact
-from core.fake_sut import FakeApiTransport, FakeBrowserPage, FakeDatabase
 from core.http_transport import UrlLibTransport
 from core.logging_util import get_logger
 
 logger = get_logger("taf.conftest", "TAF")
+
+
+class SchemaRegistry:
+    def __init__(self) -> None:
+        self.schemas: dict[str, dict[str, list[Any]]] = {}
+
+    def create_schema(self, schema: str) -> None:
+        self.schemas[schema] = {"users": []}
+
+    def drop_schema(self, schema: str) -> None:
+        self.schemas.pop(schema, None)
+
+    def schema_exists(self, schema: str) -> bool:
+        return schema in self.schemas
+
+    def count_rows(self, schema: str, table: str) -> int:
+        return len(self.schemas[schema][table])
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -82,32 +96,22 @@ def capture_artifacts_on_failure(request: pytest.FixtureRequest):
 
 
 @pytest.fixture(scope="session")
-def fake_db() -> FakeDatabase:
-    return FakeDatabase()
-
-
-@pytest.fixture(scope="session")
 def worker_id(request: pytest.FixtureRequest) -> str:
     return getattr(request.config, "workerinput", {}).get("workerid", "master")
 
 
 @pytest.fixture(scope="session")
-def worker_schema(worker_id: str, fake_db: FakeDatabase) -> str:
+def schema_registry() -> SchemaRegistry:
+    return SchemaRegistry()
+
+
+@pytest.fixture(scope="session")
+def worker_schema(worker_id: str, schema_registry: SchemaRegistry) -> str:
     prefix = load_config().get("database", {}).get("schema_prefix", "test")
     schema = f"{prefix}_{worker_id}_{uuid.uuid4().hex[:6]}"
-    fake_db.create_schema(schema)
+    schema_registry.create_schema(schema)
     yield schema
-    fake_db.drop_schema(schema)
-
-
-@pytest.fixture
-def api_transport(fake_db: FakeDatabase, worker_schema: str) -> FakeApiTransport:
-    return FakeApiTransport(fake_db, worker_schema)
-
-
-@pytest.fixture
-def user_service(api_transport: FakeApiTransport) -> UserService:
-    return UserService(api_transport)
+    schema_registry.drop_schema(schema)
 
 
 @pytest.fixture
@@ -115,18 +119,6 @@ def restful_booker_service() -> RestfulBookerService:
     return RestfulBookerService(
         UrlLibTransport(config_get("urls.restful_booker_base_url"), timeout_seconds=30)
     )
-
-
-@pytest.fixture
-def browser_page(request: pytest.FixtureRequest) -> FakeBrowserPage:
-    page = FakeBrowserPage()
-    page._pytest_node = request.node
-    return page
-
-
-@pytest.fixture
-def login_page(browser_page: FakeBrowserPage) -> LoginPage:
-    return LoginPage(browser_page)
 
 
 @pytest.fixture(scope="session")

@@ -13,27 +13,23 @@ pytest tests/
 ```text
 pytest test
   |
-  +-- user_service
+  +-- restful_booker_service
   |     |
-  |     +-- api_transport
-  |           |
-  |           +-- worker_schema
-  |                 |
-  |                 +-- fake_db
+  |     +-- UrlLibTransport
   |
-  +-- login_page
+  +-- saucedemo_login_page
         |
-        +-- browser_page
+        +-- live_browser_page
 ```
 
 ## Add a First API Test
 
-Create a test under `tests/api/` and request a business-layer fixture such as `user_service`.
+Create a test under `tests/api/` and request a business-layer fixture such as `restful_booker_service`.
 
 ```python
-def test_create_basic_user(user_service):
-    user = user_service.create_user(email="new-user@example.test")
-    assert user["email"] == "new-user@example.test"
+def test_list_bookings(restful_booker_service):
+    bookings = restful_booker_service.list_booking_ids()
+    assert isinstance(bookings, list)
 ```
 
 ## Run Reports
