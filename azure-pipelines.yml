@@ -1,12 +1,31 @@
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - '*.md'
+      - 'docs/**'
+
 trigger:
   branches:
     include:
       - main
 
+schedules:
+  - cron: '0 2 * * 1-5'
+    displayName: Nightly full regression
+    branches:
+      include:
+        - main
+    always: true
+
 variables:
   ENV: sandbox
   CI_WORKER_COUNT: 4
   SHARD_COUNT: 4
+  PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+  PLAYWRIGHT_BROWSERS_PATH: $(Pipeline.Workspace)/.playwright
 
 stages:
   - stage: StaticChecks
@@ -16,7 +35,14 @@ stages:
           - task: UsePythonVersion@0
             inputs:
               versionSpec: '3.11'
-          - script: pip install -r requirements.txt
+          - task: Cache@2
+            inputs:
+              key: 'pip | "$(Agent.OS)" | requirements.txt'
+              restoreKeys: |
+                pip | "$(Agent.OS)"
+              path: $(PIP_CACHE_DIR)
+            displayName: Cache pip packages
+          - script: pip install --cache-dir $(PIP_CACHE_DIR) -r requirements.txt
             displayName: Install dependencies
           - script: python tools/lint_no_runtime_pandas.py
             displayName: Enforce Excel adapter boundary
@@ -29,20 +55,35 @@ stages:
           - task: UsePythonVersion@0
             inputs:
               versionSpec: '3.11'
-          - script: pip install -r requirements.txt
+          - task: Cache@2
+            inputs:
+              key: 'pip | "$(Agent.OS)" | requirements.txt'
+              restoreKeys: |
+                pip | "$(Agent.OS)"
+              path: $(PIP_CACHE_DIR)
+            displayName: Cache pip packages
+          - script: pip install --cache-dir $(PIP_CACHE_DIR) -r requirements.txt
             displayName: Install dependencies
-          - script: |
-              mkdir -p $(Build.ArtifactStagingDirectory)/html-api
+          - bash: |
+              set -euo pipefail
+              MARKER_FILTER=()
+              if [ "$(Build.Reason)" = "PullRequest" ]; then
+                MARKER_FILTER=(-m "smoke and not quarantine")
+              fi
+
+              mkdir -p "$(Build.ArtifactStagingDirectory)/html-api"
               pytest tests/api/ tests/infra/ \
-                -n $(CI_WORKER_COUNT) \
+                -x \
+                -n "$(CI_WORKER_COUNT)" \
                 --dist worksteal \
                 --cov=core \
                 --cov=business \
                 --cov-fail-under=55 \
-                --cov-report=xml:$(Build.ArtifactStagingDirectory)/coverage.xml \
-                --html=$(Build.ArtifactStagingDirectory)/html-api/report.html \
+                --cov-report=xml:"$(Build.ArtifactStagingDirectory)/coverage.xml" \
+                --html="$(Build.ArtifactStagingDirectory)/html-api/report.html" \
                 --self-contained-html \
-                --junitxml=$(Build.ArtifactStagingDirectory)/junit-api.xml
+                --junitxml="$(Build.ArtifactStagingDirectory)/junit-api.xml" \
+                "${MARKER_FILTER[@]}"
             displayName: Run API and infra tests
             env:
               ENV: $(ENV)
@@ -96,21 +137,49 @@ stages:
           - task: UsePythonVersion@0
             inputs:
               versionSpec: '3.11'
-          - script: pip install -r requirements.txt
+          - task: Cache@2
+            inputs:
+              key: 'pip | "$(Agent.OS)" | requirements.txt'
+              restoreKeys: |
+                pip | "$(Agent.OS)"
+              path: $(PIP_CACHE_DIR)
+            displayName: Cache pip packages
+          - script: pip install --cache-dir $(PIP_CACHE_DIR) -r requirements.txt
             displayName: Install dependencies
-          - script: |
-              mkdir -p $(Build.ArtifactStagingDirectory)/html-e2e-$(SHARD_GROUP)
+          - task: Cache@2
+            inputs:
+              key: 'playwright | "$(Agent.OS)" | requirements.txt'
+              restoreKeys: |
+                playwright | "$(Agent.OS)"
+              path: $(PLAYWRIGHT_BROWSERS_PATH)
+            displayName: Cache Playwright browsers
+          - script: playwright install chromium
+            displayName: Install Playwright browsers (cache miss path)
+            env:
+              PLAYWRIGHT_BROWSERS_PATH: $(PLAYWRIGHT_BROWSERS_PATH)
+          - bash: |
+              set -euo pipefail
+              MARKER_FILTER=()
+              if [ "$(Build.Reason)" = "PullRequest" ]; then
+                MARKER_FILTER=(-m "smoke and not quarantine")
+              fi
+
+              mkdir -p "$(Build.ArtifactStagingDirectory)/html-e2e-$(SHARD_GROUP)"
               pytest tests/e2e/ tests/ui/ \
-                --splits $(SHARD_COUNT) \
-                --group $(SHARD_GROUP) \
-                --html=$(Build.ArtifactStagingDirectory)/html-e2e-$(SHARD_GROUP)/report.html \
+                --splits "$(SHARD_COUNT)" \
+                --group "$(SHARD_GROUP)" \
+                --reruns 1 \
+                --reruns-delay 2 \
+                --html="$(Build.ArtifactStagingDirectory)/html-e2e-$(SHARD_GROUP)/report.html" \
                 --self-contained-html \
-                --junitxml=$(Build.ArtifactStagingDirectory)/junit-e2e-$(SHARD_GROUP).xml
+                --junitxml="$(Build.ArtifactStagingDirectory)/junit-e2e-$(SHARD_GROUP).xml" \
+                "${MARKER_FILTER[@]}"
             displayName: Run UI and E2E shard
             env:
               ENV: $(ENV)
               CI_WORKER_COUNT: $(CI_WORKER_COUNT)
               SHARD_COUNT: $(SHARD_COUNT)
+              PLAYWRIGHT_BROWSERS_PATH: $(PLAYWRIGHT_BROWSERS_PATH)
           - task: PublishTestResults@2
             condition: always()
             inputs:

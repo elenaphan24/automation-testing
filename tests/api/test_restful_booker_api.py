@@ -8,7 +8,6 @@ import pytest
 
 from utils.data_loader import scenarios
 from flows.restful_booker_booking_flow import (
-    create_booking,
     full_crud_flow,
     wait_for_booking_in_list,
 )
@@ -52,44 +51,34 @@ def test_create_token_rejects_invalid_credentials(restful_booker_service, scenar
 
 
 @pytest.mark.parametrize("scenario", RESTFUL_BOOKER_SCENARIOS, ids=lambda item: item["name"])
-def test_list_booking_ids_includes_created_booking(restful_booker_service, scenario):
-    booking_id = create_booking(restful_booker_service, scenario["booking"])
+def test_list_booking_ids_includes_created_booking(restful_booker_service, created_booking, scenario):
+    booking_id, payload = created_booking
 
-    try:
-        booking_ids = restful_booker_service.list_booking_ids()
-        assert {"bookingid": booking_id} in booking_ids
+    booking_ids = restful_booker_service.list_booking_ids()
+    assert {"bookingid": booking_id} in booking_ids
 
-        booking = restful_booker_service.get_booking(booking_id)
-        _assert_booking_matches(booking, scenario["booking"])
-    finally:
-        restful_booker_service.safe_delete_booking(
-            booking_id, scenario["username"], scenario["password"]
-        )
+    booking = restful_booker_service.get_booking(booking_id)
+    _assert_booking_matches(booking, payload)
 
 
 @pytest.mark.parametrize("scenario", RESTFUL_BOOKER_SCENARIOS, ids=lambda item: item["name"])
-def test_create_booking_then_read_and_filter_by_name(restful_booker_service, scenario, unique_booking):
-    booking_id = create_booking(restful_booker_service, unique_booking)
+def test_create_booking_then_read_and_filter_by_name(restful_booker_service, created_booking, scenario):
+    booking_id, payload = created_booking
 
-    try:
-        booking = restful_booker_service.get_booking(booking_id)
-        filtered_ids = wait_for_booking_in_list(
-            booking_id,
-            lambda: restful_booker_service.list_booking_ids_by_name(
-                unique_booking["firstname"],
-                unique_booking["lastname"],
-            ),
-        )
+    booking = restful_booker_service.get_booking(booking_id)
+    filtered_ids = wait_for_booking_in_list(
+        booking_id,
+        lambda: restful_booker_service.list_booking_ids_by_name(
+            payload["firstname"],
+            payload["lastname"],
+        ),
+    )
 
-        _assert_booking_matches(booking, unique_booking)
-        if {"bookingid": booking_id} not in filtered_ids:
-            pytest.xfail(
-                "Restful Booker live API returned the booking by id but did not expose it "
-                "through the firstname/lastname filter."
-            )
-    finally:
-        restful_booker_service.safe_delete_booking(
-            booking_id, scenario["username"], scenario["password"]
+    _assert_booking_matches(booking, payload)
+    if {"bookingid": booking_id} not in filtered_ids:
+        pytest.xfail(
+            "Restful Booker live API returned the booking by id but did not expose it "
+            "through the firstname/lastname filter."
         )
 
 
