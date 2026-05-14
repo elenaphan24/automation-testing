@@ -7,6 +7,11 @@ from typing import Any
 import yaml
 
 
+def scenarios(file_path: str | Path) -> list[dict[str, Any]]:
+    """Business-friendly alias for load_test_data used by test parametrize blocks."""
+    return load_test_data(file_path)
+
+
 def load_test_data(file_path: str | Path) -> list[dict[str, Any]]:
     path = Path(file_path)
     if not path.exists():
@@ -23,4 +28,3 @@ def load_test_data(file_path: str | Path) -> list[dict[str, Any]]:
     if not all(isinstance(item, dict) for item in data):
         raise ValueError(f"Every scenario in {path} must be a mapping")
     return data
-

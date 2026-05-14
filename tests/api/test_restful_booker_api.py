@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import os
-import time
 from pathlib import Path
-from collections.abc import Callable
 from typing import Any
 
 import pytest
 
-from business.data import scenarios
+from utils.data_loader import scenarios
+from flows.restful_booker_booking_flow import (
+    create_booking,
+    full_crud_flow,
+    wait_for_booking_in_list,
+)
 
 
 pytestmark = [
@@ -22,6 +25,13 @@ pytestmark = [
 RESTFUL_BOOKER_SCENARIOS = scenarios(
     Path(__file__).resolve().parents[2] / "data/yaml/restful_booker_scenarios.yaml"
 )
+
+
+def _assert_booking_matches(actual: dict[str, Any], expected: dict[str, Any]) -> None:
+    for key, value in expected.items():
+        assert actual.get(key) == value, (
+            f"booking[{key!r}] mismatch: expected {value!r}, got {actual.get(key)!r}"
+        )
 
 
 @pytest.mark.parametrize("scenario", RESTFUL_BOOKER_SCENARIOS, ids=lambda item: item["name"])
@@ -41,37 +51,9 @@ def test_create_token_rejects_invalid_credentials(restful_booker_service, scenar
     assert result["reason"] == "Bad credentials"
 
 
-def _assert_booking_matches(actual: dict[str, Any], expected: dict[str, Any]) -> None:
-    for key, value in expected.items():
-        assert actual.get(key) == value, (
-            f"booking[{key!r}] mismatch: expected {value!r}, got {actual.get(key)!r}"
-        )
-
-
-def _wait_for_booking_id(
-    booking_id: int,
-    list_booking_ids: Callable[[], list[dict[str, int]]],
-    *,
-    attempts: int = 5,
-    delay_seconds: float = 1.0,
-) -> list[dict[str, int]]:
-    booking_ref = {"bookingid": booking_id}
-    filtered_ids: list[dict[str, int]] = []
-
-    for attempt in range(attempts):
-        filtered_ids = list_booking_ids()
-        if booking_ref in filtered_ids:
-            return filtered_ids
-        if attempt < attempts - 1:
-            time.sleep(delay_seconds)
-
-    return filtered_ids
-
-
 @pytest.mark.parametrize("scenario", RESTFUL_BOOKER_SCENARIOS, ids=lambda item: item["name"])
 def test_list_booking_ids_includes_created_booking(restful_booker_service, scenario):
-    created = restful_booker_service.create_booking(scenario["booking"])
-    booking_id = created["bookingid"]
+    booking_id = create_booking(restful_booker_service, scenario["booking"])
 
     try:
         booking_ids = restful_booker_service.list_booking_ids()
@@ -86,21 +68,20 @@ def test_list_booking_ids_includes_created_booking(restful_booker_service, scena
 
 
 @pytest.mark.parametrize("scenario", RESTFUL_BOOKER_SCENARIOS, ids=lambda item: item["name"])
-def test_create_booking_then_read_and_filter_by_name(restful_booker_service, scenario):
-    created = restful_booker_service.create_booking(scenario["booking"])
-    booking_id = created["bookingid"]
+def test_create_booking_then_read_and_filter_by_name(restful_booker_service, scenario, unique_booking):
+    booking_id = create_booking(restful_booker_service, unique_booking)
 
     try:
         booking = restful_booker_service.get_booking(booking_id)
-        filtered_ids = _wait_for_booking_id(
+        filtered_ids = wait_for_booking_in_list(
             booking_id,
             lambda: restful_booker_service.list_booking_ids_by_name(
-                scenario["booking"]["firstname"],
-                scenario["booking"]["lastname"],
+                unique_booking["firstname"],
+                unique_booking["lastname"],
             ),
         )
 
-        _assert_booking_matches(booking, scenario["booking"])
+        _assert_booking_matches(booking, unique_booking)
         if {"bookingid": booking_id} not in filtered_ids:
             pytest.xfail(
                 "Restful Booker live API returned the booking by id but did not expose it "
@@ -114,23 +95,15 @@ def test_create_booking_then_read_and_filter_by_name(restful_booker_service, sce
 
 @pytest.mark.parametrize("scenario", RESTFUL_BOOKER_SCENARIOS, ids=lambda item: item["name"])
 def test_update_patch_and_delete_booking(restful_booker_service, scenario):
-    created = restful_booker_service.create_booking(scenario["booking"])
-    booking_id = created["bookingid"]
-    restful_booker_service.create_token(scenario["username"], scenario["password"])
-    deleted: dict[str, Any] | None = None
+    result = full_crud_flow(
+        restful_booker_service,
+        booking=scenario["booking"],
+        updated_booking=scenario["updated_booking"],
+        partial_update=scenario["partial_update"],
+        username=scenario["username"],
+        password=scenario["password"],
+    )
 
-    try:
-        updated = restful_booker_service.update_booking(booking_id, scenario["updated_booking"])
-        patched = restful_booker_service.partially_update_booking(
-            booking_id, scenario["partial_update"]
-        )
-        deleted = restful_booker_service.delete_booking(booking_id)
-
-        _assert_booking_matches(updated, scenario["updated_booking"])
-        _assert_booking_matches(patched, scenario["partial_update"])
-        assert deleted.get("data") == "Created"
-    finally:
-        if deleted is None:
-            restful_booker_service.safe_delete_booking(
-                booking_id, scenario["username"], scenario["password"]
-            )
+    _assert_booking_matches(result["updated"], scenario["updated_booking"])
+    _assert_booking_matches(result["patched"], scenario["partial_update"])
+    assert result["deleted"].get("data") == "Created"

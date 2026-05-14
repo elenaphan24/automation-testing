@@ -3,8 +3,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-ALLOWED = {Path("core/excel_adapter.py")}
-SCAN_DIRS = [Path("business"), Path("core"), Path("tests")]
+SCAN_DIRS = [Path("business"), Path("core"), Path("flows"), Path("utils"), Path("tests")]
 
 
 def imports_pandas(path: Path) -> bool:
@@ -22,13 +21,11 @@ def main() -> int:
     violations: list[Path] = []
     for directory in SCAN_DIRS:
         for path in directory.rglob("*.py"):
-            if path in ALLOWED:
-                continue
             if imports_pandas(path):
                 violations.append(path)
 
     if violations:
-        print("Runtime pandas imports are forbidden outside core/excel_adapter.py:")
+        print("Runtime pandas imports are forbidden:")
         for path in violations:
             print(f"- {path}")
         return 1

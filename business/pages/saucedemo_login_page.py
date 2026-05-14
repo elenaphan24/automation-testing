@@ -21,3 +21,11 @@ class SauceDemoLoginPage(BasePage):
         self.page.get_by_placeholder("Username").fill(username)
         self.page.get_by_placeholder("Password").fill(password)
         self.page.get_by_role("button", name="Login").click()
+
+    def assert_login_error(self, expected_fragment: str) -> None:
+        self.logger.info("assert login error contains: %s", expected_fragment)
+        error = self.get_by_test_id("error")
+        assert error.is_visible(), "Expected login error banner to be visible"
+        assert expected_fragment in error.inner_text(), (
+            f"Expected {expected_fragment!r} in login error, got {error.inner_text()!r}"
+        )

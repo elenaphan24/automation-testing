@@ -39,4 +39,3 @@ def export_failure_artifact(node: Any) -> Path:
         encoding="utf-8",
     )
     return artifact_dir
-

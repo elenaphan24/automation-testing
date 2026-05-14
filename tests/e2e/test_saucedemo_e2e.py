@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from business.data import scenarios
+from utils.data_loader import scenarios
+from flows.saucedemo_checkout_flow import purchase_item
 
 
 pytestmark = [
@@ -30,20 +31,15 @@ def test_standard_user_can_buy_backpack(
     scenario,
 ):
     checkout = scenario["checkout"]
-
-    saucedemo_login_page.open()
-    saucedemo_login_page.login(scenario["username"], scenario["password"])
-    saucedemo_inventory_page.assert_opened()
-
-    saucedemo_inventory_page.add_item_to_cart(scenario["item_name"])
-    saucedemo_inventory_page.open_cart()
-    saucedemo_cart_page.assert_has_item(scenario["item_name"])
-
-    saucedemo_cart_page.checkout()
-    saucedemo_checkout_page.fill_information(
-        checkout["first_name"],
-        checkout["last_name"],
-        checkout["postal_code"],
+    purchase_item(
+        saucedemo_login_page,
+        saucedemo_inventory_page,
+        saucedemo_cart_page,
+        saucedemo_checkout_page,
+        username=scenario["username"],
+        password=scenario["password"],
+        item_name=scenario["item_name"],
+        first_name=checkout["first_name"],
+        last_name=checkout["last_name"],
+        postal_code=checkout["postal_code"],
     )
-    saucedemo_checkout_page.finish()
-    saucedemo_checkout_page.assert_order_complete()
