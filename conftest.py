@@ -54,15 +54,36 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[Any]):
     outcome = yield
     report = outcome.get_result()
     setattr(item, f"rep_{report.when}", report)
-    if report.when == "call" and report.failed:
-        screenshot = getattr(item, "_screenshot", None)
-        if screenshot:
-            try:
-                from pytest_html import extras
 
+    try:
+        from pytest_html import extras as html_extras
+
+        extra = getattr(report, "extras", [])
+
+        # Embed captured log for every test phase that produced output
+        for section_name, section_content in report.sections:
+            if "log" in section_name.lower() and section_content.strip():
+                lines = section_content.strip().split("\n")
+                rows = "".join(
+                    f"<tr><td style='white-space:pre;font-family:monospace;"
+                    f"font-size:12px;padding:2px 6px'>{line}</td></tr>"
+                    for line in lines
+                )
+                table = (
+                    f"<table style='width:100%;border-collapse:collapse;margin-top:4px'>"
+                    f"<thead><tr><th style='text-align:left;background:#dce8f5;"
+                    f"padding:4px 6px'>{section_name}</th></tr></thead>"
+                    f"<tbody>{rows}</tbody></table>"
+                )
+                extra.append(html_extras.html(table))
+
+        # Failure screenshot
+        if report.when == "call" and report.failed:
+            screenshot = getattr(item, "_screenshot", None)
+            if screenshot:
                 encoded = base64.b64encode(screenshot).decode("ascii")
-                extra = getattr(report, "extras", [])
-                extra.append(extras.png(encoded, name="failure-screenshot"))
-                report.extras = extra
-            except ImportError:
-                logger.warning("pytest-html not installed; screenshot not embedded")
+                extra.append(html_extras.png(encoded, name="failure-screenshot"))
+
+        report.extras = extra
+    except ImportError:
+        logger.warning("pytest-html not installed; extras not embedded")
